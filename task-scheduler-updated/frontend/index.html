@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Task Scheduler — Dashboard</title>
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <style>
+        body {
+            background-color: #f2f4f7;
+        }
+        pre {
+            background: #0f172a;
+            color: #e2e8f0;
+            padding: 12px;
+            border-radius: 8px;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+
+<body class="p-6">
+
+    <h1 class="text-4xl font-bold mb-8">Task Scheduler — Dashboard</h1>
+
+    <!-- Grid Layout -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+        <!-- Create Task -->
+        <div class="bg-white p-6 shadow rounded-lg">
+            <h2 class="text-xl font-semibold mb-4">Create Task</h2>
+
+            <label class="block mb-2 font-medium">Priority (higher runs first)</label>
+            <input id="priority" type="number" class="border p-2 rounded w-full mb-4" value="5">
+
+            <label class="block mb-2 font-medium">Processing time (ms)</label>
+            <input id="time" type="number" class="border p-2 rounded w-full mb-4" value="5000">
+
+            <button onclick="createTask()"
+                class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+                Create Task
+            </button>
+
+            <p class="mt-4 text-sm text-gray-500">
+                Note: This UI sends POST requests to the Java backend.
+            </p>
+        </div>
+
+
+        <!-- Workers -->
+        <div class="bg-white p-6 shadow rounded-lg">
+            <h2 class="text-xl font-semibold mb-4">Workers</h2>
+            <pre id="workersBox">Loading...</pre>
+        </div>
+
+        <!-- Tasks -->
+        <div class="bg-white p-6 shadow rounded-lg">
+            <h2 class="text-xl font-semibold mb-4">Tasks (from DB)</h2>
+            <pre id="tasksBox">Loading...</pre>
+        </div>
+
+    </div>
+
+    <!-- SINGLE SCRIPT BLOCK (fixed) -->
+    <script>
+
+        // ==========================
+        // Create Task (POST)
+        // ==========================
+        function createTask() {
+            let p = document.getElementById("priority").value;
+            let t = document.getElementById("time").value;
+
+            fetch(`http://localhost:8080/task?priority=${p}&time=${t}`, {
+                method: "POST"
+            })
+            .then(r => r.text())
+            .then(data => {
+                console.log("Task created:", data);  // NO ALERT POPUP
+            })
+            .catch(err => {
+                console.error("Error:", err);
+            });
+        }
+
+
+        // ==========================
+        // Load Workers (GET)
+        // ==========================
+        function loadWorkers() {
+            fetch("http://localhost:8080/workers")
+                .then(r => r.text())
+                .then(data => {
+                    document.getElementById("workersBox").textContent = data;
+                })
+                .catch(() => {
+                    document.getElementById("workersBox").textContent = "Error loading workers";
+                });
+        }
+
+
+        // ==========================
+        // Load Tasks (GET)
+        // ==========================
+        function loadTasks() {
+            fetch("http://localhost:8080/tasks")
+                .then(r => r.text())
+                .then(data => {
+                    document.getElementById("tasksBox").textContent = data;
+                })
+                .catch(() => {
+                    document.getElementById("tasksBox").textContent = "Error loading tasks";
+                });
+        }
+
+
+        // Auto-refresh every 500ms (smooth UI)
+        setInterval(loadWorkers, 500);
+        setInterval(loadTasks, 500);
+
+    </script>
+
+</body>
+</html>
+
+
